@@ -336,17 +336,18 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
       if (tcl_list_length(list) == 0) {
         tcl_result(tcl, FNORMAL, tcl_alloc("", 0));
       } else {
-        const char *cmdname = tcl_string(tcl_list_at(list, 0));
+        tcl_value_t *cmdname  = tcl_list_at(list, 0);
         struct tcl_cmd *cmd = NULL;
         int r = FERROR;
         for (cmd = tcl->cmds; cmd != NULL; cmd = cmd->next) {
-          if (strcmp(cmdname, cmd->name) == 0) {
+          if (strcmp(tcl_string(cmdname), cmd->name) == 0) {
             if (cmd->arity == 0 || cmd->arity == tcl_list_length(list)) {
               r = cmd->fn(tcl, list, cmd->arg);
               break;
             }
           }
         }
+        tcl_free(cmdname);
         if (cmd == NULL || r != FNORMAL) {
           return r;
         }
@@ -484,9 +485,12 @@ static int tcl_cmd_while(struct tcl *tcl, tcl_value_t *args, void *arg) {
 
 static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
   char buf[64];
-  const char *op = tcl_string(tcl_list_at(args, 0));
-  int a = tcl_int(tcl_list_at(args, 1));
-  int b = tcl_int(tcl_list_at(args, 2));
+  tcl_value_t *opval = tcl_list_at(args, 0);
+  tcl_value_t *aval = tcl_list_at(args, 1);
+  tcl_value_t *bval = tcl_list_at(args, 2);
+  const char *op = tcl_string(opval);
+  int a = tcl_int(aval);
+  int b = tcl_int(bval);
   int c = 0;
   if (op[0] == '+')
     c = a + b;
@@ -509,6 +513,9 @@ static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
   else if (op[0] == '!' && op[1] == '=')
     c = a != b;
   snprintf(buf, 64, "%d", c);
+  tcl_free(opval);
+  tcl_free(aval);
+  tcl_free(bval);
   return tcl_result(tcl, FNORMAL, tcl_alloc(buf, strlen(buf)));
 }
 
