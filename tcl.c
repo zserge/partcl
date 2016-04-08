@@ -117,7 +117,9 @@ const char *tcl_string(tcl_value_t *v) { return (char *)v; }
 int tcl_int(tcl_value_t *v) { return atoi((char *)v); }
 int tcl_length(tcl_value_t *v) { return v == NULL ? 0 : strlen(v); }
 
-tcl_value_t *tcl_append(tcl_value_t *v, const char *s, size_t len) {
+void tcl_free(tcl_value_t *v) { free(v); }
+
+tcl_value_t *tcl_append_string(tcl_value_t *v, const char *s, size_t len) {
   size_t n = tcl_length(v);
   v = realloc(v, n + len + 1);
   memset((char *)tcl_string(v) + n, 0, len + 1);
@@ -125,15 +127,18 @@ tcl_value_t *tcl_append(tcl_value_t *v, const char *s, size_t len) {
   return v;
 }
 
+tcl_value_t *tcl_append(tcl_value_t *v, tcl_value_t *tail) {
+  v = tcl_append_string(v, tcl_string(tail), tcl_length(tail));
+  tcl_free(tail);
+  return v;
+}
+
 tcl_value_t *tcl_alloc(const char *s, size_t len) {
-  return tcl_append(NULL, s, len);
+  return tcl_append_string(NULL, s, len);
 }
 
 tcl_value_t *tcl_dup(tcl_value_t *v) {
   return tcl_alloc(tcl_string(v), tcl_length(v));
-}
-
-void tcl_free(tcl_value_t *v) { /*free(v);*/ /* TODO */
 }
 
 tcl_value_t *tcl_list_alloc() { return tcl_alloc("", 0); }
@@ -169,7 +174,7 @@ tcl_value_t *tcl_list_at(tcl_value_t *v, int index) {
 
 tcl_value_t *tcl_list_append(tcl_value_t *v, tcl_value_t *tail) {
   if (tcl_length(v) > 0) {
-    v = tcl_append(v, " ", 2);
+    v = tcl_append(v, tcl_alloc(" ", 2));
   }
   if (tcl_length(tail) > 0) {
     int q = 0;
@@ -181,14 +186,14 @@ tcl_value_t *tcl_list_append(tcl_value_t *v, tcl_value_t *tail) {
       }
     }
     if (q) {
-      v = tcl_append(v, "{", 1);
+      v = tcl_append(v, tcl_alloc("{", 1));
     }
-    v = tcl_append(v, tcl_string(tail), tcl_length(tail) + 1);
+    v = tcl_append(v, tcl_dup(tail));
     if (q) {
-      v = tcl_append(v, "}", 1);
+      v = tcl_append(v, tcl_alloc("}", 1));
     }
   } else {
-    v = tcl_append(v, "{}", 2);
+    v = tcl_append(v, tcl_alloc("{}", 2));
   }
   return v;
 }
@@ -242,7 +247,7 @@ tcl_value_t *tcl_var(struct tcl *tcl, const char *name, tcl_value_t *v) {
   }
   if (v != NULL) {
     // TODO free old value
-    var->value = v;
+    var->value = tcl_dup(v);
   }
   return var->value;
 }
@@ -290,7 +295,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
       if (cur != NULL) {
         tcl_subst(tcl, p.from, p.to - p.from);
         tcl_value_t *part = tcl_dup(tcl->result);
-        cur = tcl_append(cur, tcl_string(part), tcl_length(part));
+        cur = tcl_append(cur, part);
       } else {
         tcl_subst(tcl, p.from, p.to - p.from);
         cur = tcl_dup(tcl->result);
@@ -301,7 +306,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
     case TPART:
       tcl_subst(tcl, p.from, p.to - p.from);
       tcl_value_t *part = tcl_dup(tcl->result);
-      cur = tcl_append(cur, tcl_string(part), tcl_length(part));
+      cur = tcl_append(cur, part);
       break;
     case TCMD:
       if (tcl_list_length(list) == 0) {
@@ -349,7 +354,7 @@ void tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
 static int tcl_cmd_set(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *var = tcl_list_at(args, 1);
   tcl_value_t *val = tcl_list_at(args, 2);
-  return tcl_result(tcl, FNORMAL, tcl_var(tcl, tcl_string(var), val));
+  return tcl_result(tcl, FNORMAL, tcl_dup(tcl_var(tcl, tcl_string(var), val)));
 }
 
 static int tcl_cmd_subst(struct tcl *tcl, tcl_value_t *args, void *arg) {
