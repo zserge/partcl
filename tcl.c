@@ -349,6 +349,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
         }
         tcl_free(cmdname);
         if (cmd == NULL || r != FNORMAL) {
+          tcl_list_free(list);
           return r;
         }
       }
@@ -369,7 +370,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
 void tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
                   void *arg) {
   struct tcl_cmd *cmd = malloc(sizeof(struct tcl_cmd));
-  cmd->name = name;
+  cmd->name = strdup(name);
   cmd->fn = fn;
   cmd->arg = arg;
   cmd->arity = arity;
@@ -380,12 +381,16 @@ void tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
 static int tcl_cmd_set(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *var = tcl_list_at(args, 1);
   tcl_value_t *val = tcl_list_at(args, 2);
-  return tcl_result(tcl, FNORMAL, tcl_dup(tcl_var(tcl, tcl_string(var), val)));
+  int r = tcl_result(tcl, FNORMAL, tcl_dup(tcl_var(tcl, tcl_string(var), val)));
+  tcl_free(var);
+  return r;
 }
 
 static int tcl_cmd_subst(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *s = tcl_list_at(args, 1);
-  return tcl_subst(tcl, tcl_string(s), tcl_length(s));
+  int r = tcl_subst(tcl, tcl_string(s), tcl_length(s));
+  tcl_free(s);
+  return r;
 }
 
 static int tcl_cmd_puts(struct tcl *tcl, tcl_value_t *args, void *arg) {
@@ -404,6 +409,7 @@ static int tcl_user_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
     tcl_value_t *param = tcl_list_at(params, i);
     tcl_value_t *v = tcl_list_at(args, i + 1);
     tcl_var(tcl, tcl_string(param), v);
+    tcl_free(param);
   }
   i = tcl_eval(tcl, tcl_string(body), tcl_length(body) + 1);
   tcl->env = tcl_env_free(tcl->env);
@@ -413,8 +419,10 @@ static int tcl_user_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
 }
 
 static int tcl_cmd_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  tcl_register(tcl, tcl_string(tcl_list_at(args, 1)), tcl_user_proc, 0,
+  tcl_value_t *name = tcl_list_at(args, 1);
+  tcl_register(tcl, tcl_string(name), tcl_user_proc, 0,
       tcl_dup(args));
+  tcl_free(name);
   return tcl_result(tcl, FNORMAL, tcl_alloc("", 0));
 }
 
@@ -446,38 +454,52 @@ static int tcl_cmd_if(struct tcl *tcl, tcl_value_t *args, void *arg) {
 }
 
 static int tcl_cmd_flow(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  const char *flow = tcl_string(tcl_list_at(args, 0));
+  tcl_value_t *flowval = tcl_list_at(args, 0);
+  const char *flow = tcl_string(flowval);
   if (strcmp(flow, "break") == 0) {
+    tcl_free(flowval);
     return FBREAK;
   } else if (strcmp(flow, "continue") == 0) {
+    tcl_free(flowval);
     return FAGAIN;
   } else if (strcmp(flow, "return") == 0) {
+    tcl_free(flowval);
     return tcl_result(tcl, FRETURN, tcl_list_at(args, 1));
   }
   return FERROR;
 }
 
 static int tcl_cmd_while(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  const char *cond = tcl_string(tcl_list_at(args, 1));
-  const char *loop = tcl_string(tcl_list_at(args, 2));
+  tcl_value_t *cond = tcl_list_at(args, 1);
+  tcl_value_t *loop = tcl_list_at(args, 2);
   int r;
   for (;;) {
-    r = tcl_eval(tcl, cond, strlen(cond) + 1);
+    r = tcl_eval(tcl, tcl_string(cond), tcl_length(cond) + 1);
     if (r != FNORMAL) {
+      tcl_free(cond);
+      tcl_free(loop);
       return r;
     }
     if (!tcl_int(tcl->result)) {
+      tcl_free(cond);
+      tcl_free(loop);
       return FNORMAL;
     }
-    int r = tcl_eval(tcl, loop, strlen(loop) + 1);
+    int r = tcl_eval(tcl, tcl_string(loop), tcl_length(loop) + 1);
     switch (r) {
     case FBREAK:
+      tcl_free(cond);
+      tcl_free(loop);
       return FNORMAL;
     case FRETURN:
+      tcl_free(cond);
+      tcl_free(loop);
       return FRETURN;
     case FAGAIN:
       continue;
     case FERROR:
+      tcl_free(cond);
+      tcl_free(loop);
       return FERROR;
     }
   }
@@ -548,6 +570,7 @@ void tcl_destroy(struct tcl *tcl) {
   while (tcl->cmds) {
     struct tcl_cmd *cmd = tcl->cmds;
     tcl->cmds = tcl->cmds->next;
+    free(cmd->name);
     free(cmd->arg);
     free(cmd);
   }
