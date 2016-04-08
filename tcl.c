@@ -336,7 +336,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
       if (tcl_list_length(list) == 0) {
         tcl_result(tcl, FNORMAL, tcl_alloc("", 0));
       } else {
-        tcl_value_t *cmdname  = tcl_list_at(list, 0);
+        tcl_value_t *cmdname = tcl_list_at(list, 0);
         struct tcl_cmd *cmd = NULL;
         int r = FERROR;
         for (cmd = tcl->cmds; cmd != NULL; cmd = cmd->next) {
@@ -420,8 +420,7 @@ static int tcl_user_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
 
 static int tcl_cmd_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *name = tcl_list_at(args, 1);
-  tcl_register(tcl, tcl_string(name), tcl_user_proc, 0,
-      tcl_dup(args));
+  tcl_register(tcl, tcl_string(name), tcl_user_proc, 0, tcl_dup(args));
   tcl_free(name);
   return tcl_result(tcl, FNORMAL, tcl_alloc("", 0));
 }
