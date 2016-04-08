@@ -324,6 +324,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
         cur = tcl_dup(tcl->result);
       }
       list = tcl_list_append(list, cur);
+      tcl_free(cur);
       cur = NULL;
       break;
     case TPART:
