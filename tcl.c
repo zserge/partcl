@@ -231,7 +231,8 @@ static struct tcl_env *tcl_env_alloc(struct tcl_env *parent) {
   return env;
 }
 
-static void tcl_env_free(struct tcl_env *env) {
+static struct tcl_env *tcl_env_free(struct tcl_env *env) {
+  struct tcl_env *parent = env->parent;
   while (env->vars) {
     struct tcl_var *var = env->vars;
     env->vars = env->vars->next;
@@ -240,6 +241,7 @@ static void tcl_env_free(struct tcl_env *env) {
     free(var);
   }
   free(env);
+  return parent;
 }
 
 struct tcl {
@@ -395,16 +397,14 @@ static int tcl_user_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *params = tcl_list_at(code, 2);
   tcl_value_t *body = tcl_list_at(code, 3);
   int i;
-  struct tcl_env *env = tcl_env_alloc(tcl->env);
-  tcl->env = env;
+  tcl->env = tcl_env_alloc(tcl->env);
   for (i = 0; i < tcl_list_length(params); i++) {
     tcl_value_t *param = tcl_list_at(params, i);
     tcl_value_t *v = tcl_list_at(args, i + 1);
     tcl_var(tcl, tcl_string(param), v);
   }
   i = tcl_eval(tcl, tcl_string(body), tcl_length(body) + 1);
-  tcl->env = env->parent;
-  tcl_env_free(env);
+  tcl->env = tcl_env_free(tcl->env);
   tcl_free(params);
   tcl_free(body);
   return FNORMAL;
@@ -535,9 +535,7 @@ struct tcl *tcl_create() {
 
 void tcl_destroy(struct tcl *tcl) {
   while (tcl->env) {
-    struct tcl_env *env = tcl->env;
-    tcl->env = tcl->env->parent;
-    tcl_env_free(env);
+    tcl->env = tcl_env_free(tcl->env);
   }
   while (tcl->cmds) {
     struct tcl_cmd *cmd = tcl->cmds;
