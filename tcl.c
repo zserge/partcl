@@ -206,7 +206,7 @@ tcl_value_t *tcl_list_append(tcl_value_t *v, tcl_value_t *tail) {
 typedef int (*tcl_cmd_fn_t)(struct tcl *, tcl_value_t *, void *);
 
 struct tcl_cmd {
-  const char *name;
+  tcl_value_t *name;
   int arity;
   tcl_cmd_fn_t fn;
   void *arg;
@@ -340,7 +340,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
         struct tcl_cmd *cmd = NULL;
         int r = FERROR;
         for (cmd = tcl->cmds; cmd != NULL; cmd = cmd->next) {
-          if (strcmp(tcl_string(cmdname), cmd->name) == 0) {
+          if (strcmp(tcl_string(cmdname), tcl_string(cmd->name)) == 0) {
             if (cmd->arity == 0 || cmd->arity == tcl_list_length(list)) {
               r = cmd->fn(tcl, list, cmd->arg);
               break;
@@ -370,7 +370,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
 void tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
                   void *arg) {
   struct tcl_cmd *cmd = malloc(sizeof(struct tcl_cmd));
-  cmd->name = strdup(name);
+  cmd->name = tcl_alloc(name, strlen(name));
   cmd->fn = fn;
   cmd->arg = arg;
   cmd->arity = arity;
@@ -569,7 +569,7 @@ void tcl_destroy(struct tcl *tcl) {
   while (tcl->cmds) {
     struct tcl_cmd *cmd = tcl->cmds;
     tcl->cmds = tcl->cmds->next;
-    free(cmd->name);
+    tcl_free(cmd->name);
     free(cmd->arg);
     free(cmd);
   }
