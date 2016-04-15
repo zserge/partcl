@@ -214,7 +214,7 @@ struct tcl_cmd {
 };
 
 struct tcl_var {
-  char *name;
+  tcl_value_t *name;
   tcl_value_t *value;
   struct tcl_var *next;
 };
@@ -236,7 +236,7 @@ static struct tcl_env *tcl_env_free(struct tcl_env *env) {
   while (env->vars) {
     struct tcl_var *var = env->vars;
     env->vars = env->vars->next;
-    free(var->name);
+    tcl_free(var->name);
     tcl_free(var->value);
     free(var);
   }
@@ -251,16 +251,16 @@ struct tcl {
 };
 
 tcl_value_t *tcl_var(struct tcl *tcl, const char *name, tcl_value_t *v) {
-  DBG("var(%s := %.*s)\n", name, tcl_length(v), tcl_string(v));
+  DBG("var(%s := %.*s)\n", tcl_string(name), tcl_length(v), tcl_string(v));
   struct tcl_var *var;
   for (var = tcl->env->vars; var != NULL; var = var->next) {
-    if (strcmp(var->name, name) == 0) {
+    if (strcmp(var->name, tcl_string(name)) == 0) {
       break;
     }
   }
   if (var == NULL) {
     var = malloc(sizeof(struct tcl_var));
-    var->name = (char *)strdup(name);
+    var->name = tcl_alloc(name, strlen(name));
     var->next = tcl->env->vars;
     var->value = tcl_alloc("", 0);
     tcl->env->vars = var;
