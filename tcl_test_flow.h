@@ -38,20 +38,22 @@ static void test_flow() {
   check_eval(NULL, "proc fib {x} { if {<= $x 1} {return 1} "
                    "{ return [+ [fib [- $x 1]] [fib [- $x 2]]]}}; fib 20",
              "10946");
-  struct tcl *tcl = tcl_create();
-  check_eval(tcl, "proc square {x} { * $x $x }; square 7", "49");
-  check_eval(tcl, "set a 4", "4");
-  check_eval(tcl, "square $a", "16");
-  check_eval(tcl, "subst \"$a[]*$a ?\"", "4*4 ?");
-  check_eval(tcl, "subst \"I can compute that $a[]x$a = [square $a]\"",
+
+  struct tcl tcl;
+  tcl_init(&tcl);
+  check_eval(&tcl, "proc square {x} { * $x $x }; square 7", "49");
+  check_eval(&tcl, "set a 4", "4");
+  check_eval(&tcl, "square $a", "16");
+  check_eval(&tcl, "subst \"$a[]*$a ?\"", "4*4 ?");
+  check_eval(&tcl, "subst \"I can compute that $a[]x$a = [square $a]\"",
              "I can compute that 4x4 = 16");
-  check_eval(tcl, "set a 1", "1");
-  check_eval(tcl, "while {<= $a 10} { puts \"$a [== $a 5]\";"
+  check_eval(&tcl, "set a 1", "1");
+  check_eval(&tcl, "while {<= $a 10} { puts \"$a [== $a 5]\";"
                   "if {== $a 5} { puts {Missing five!}; set a [+ $a 1]; "
                   "continue;}; puts \"I can compute that $a[]x$a = [square "
                   "$a]\" ; set a [+ $a 1]}",
              "0");
-  tcl_destroy(tcl);
+  tcl_destroy(&tcl);
 }
 
 #endif /* TCL_TEST_FLOW_H */

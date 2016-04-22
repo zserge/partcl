@@ -540,9 +540,7 @@ static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
   return tcl_result(tcl, FNORMAL, tcl_alloc(buf, strlen(buf)));
 }
 
-struct tcl *tcl_create() {
-  int i;
-  struct tcl *tcl = (struct tcl *)malloc(sizeof(struct tcl));
+void tcl_init(struct tcl *tcl) {
   tcl->env = tcl_env_alloc(NULL);
   tcl->result = tcl_alloc("", 0);
   tcl->cmds = NULL;
@@ -556,10 +554,9 @@ struct tcl *tcl_create() {
   tcl_register(tcl, "break", tcl_cmd_flow, 1, NULL);
   tcl_register(tcl, "continue", tcl_cmd_flow, 1, NULL);
   char *math[] = {"+", "-", "*", "/", ">", ">=", "<", "<=", "==", "!="};
-  for (i = 0; i < (sizeof(math) / sizeof(math[0])); i++) {
+  for (int i = 0; i < (sizeof(math) / sizeof(math[0])); i++) {
     tcl_register(tcl, math[i], tcl_cmd_math, 3, NULL);
   }
-  return tcl;
 }
 
 void tcl_destroy(struct tcl *tcl) {
@@ -574,7 +571,6 @@ void tcl_destroy(struct tcl *tcl) {
     free(cmd);
   }
   tcl_free(tcl->result);
-  free(tcl);
 }
 
 #ifndef TEST

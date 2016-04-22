@@ -2,9 +2,12 @@
 #define TCL_TEST_SUBST_H
 
 static void check_eval(struct tcl *tcl, const char *s, char *expected) {
-  struct tcl *local_tcl = NULL;
+  int destroy = 0;
   if (tcl == NULL) {
-    tcl = local_tcl = tcl_create();
+    struct tcl tmp;
+    tcl_init(&tmp);
+    tcl = &tmp;
+    destroy = 1;
   }
   if (tcl_eval(tcl, s, strlen(s) + 1) == FERROR) {
     FAIL("eval returned error: %s, (%s)\n", tcl_string(tcl->result), s);
@@ -14,8 +17,8 @@ static void check_eval(struct tcl *tcl, const char *s, char *expected) {
   } else {
     printf("OK: %s -> %s\n", s, expected);
   }
-  if (local_tcl) {
-    tcl_destroy(local_tcl);
+  if (destroy) {
+    tcl_destroy(tcl);
   }
 }
 
@@ -26,7 +29,6 @@ static void test_subst() {
   printf("###################\n");
   printf("\n");
 
-  struct tcl *tcl;
 
   check_eval(NULL, "subst hello", "hello");
   check_eval(NULL, "subst {hello}", "hello");
@@ -35,17 +37,18 @@ static void test_subst() {
 
   check_eval(NULL, "subst $foo", "");
 
-  tcl = tcl_create();
-  tcl_var(tcl, "foo", tcl_alloc("bar", 3));
-  tcl_var(tcl, "bar", tcl_alloc("baz", 3));
-  tcl_var(tcl, "baz", tcl_alloc("Hello", 5));
-  check_eval(tcl, "subst $foo", "bar");
-  check_eval(tcl, "subst $foo[]$foo", "barbar");
-  check_eval(tcl, "subst $$foo", "baz");
-  check_eval(tcl, "subst [set $foo]", "baz");
-  check_eval(tcl, "subst $[set $foo]", "Hello");
-  check_eval(tcl, "subst $$$foo", "Hello");
-  tcl_destroy(tcl);
+  struct tcl tcl;
+  tcl_init(&tcl);
+  tcl_var(&tcl, "foo", tcl_alloc("bar", 3));
+  tcl_var(&tcl, "bar", tcl_alloc("baz", 3));
+  tcl_var(&tcl, "baz", tcl_alloc("Hello", 5));
+  check_eval(&tcl, "subst $foo", "bar");
+  check_eval(&tcl, "subst $foo[]$foo", "barbar");
+  check_eval(&tcl, "subst $$foo", "baz");
+  check_eval(&tcl, "subst [set $foo]", "baz");
+  check_eval(&tcl, "subst $[set $foo]", "Hello");
+  check_eval(&tcl, "subst $$$foo", "Hello");
+  tcl_destroy(&tcl);
 
   check_eval(NULL, "subst {hello}{world}", "helloworld");
   check_eval(NULL, "subst hello[subst world]", "helloworld");
