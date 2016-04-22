@@ -231,6 +231,16 @@ static struct tcl_env *tcl_env_alloc(struct tcl_env *parent) {
   return env;
 }
 
+static struct tcl_var *tcl_env_var(struct tcl_env *env,
+    tcl_value_t *name) {
+  struct tcl_var *var = malloc(sizeof(struct tcl_var));
+  var->name = tcl_dup(name);
+  var->next = env->vars;
+  var->value = tcl_alloc("", 0);
+  env->vars = var;
+  return var;
+}
+
 static struct tcl_env *tcl_env_free(struct tcl_env *env) {
   struct tcl_env *parent = env->parent;
   while (env->vars) {
@@ -259,11 +269,7 @@ tcl_value_t *tcl_var(struct tcl *tcl, tcl_value_t *name, tcl_value_t *v) {
     }
   }
   if (var == NULL) {
-    var = malloc(sizeof(struct tcl_var));
-    var->name = tcl_alloc(name, strlen(name));
-    var->next = tcl->env->vars;
-    var->value = tcl_alloc("", 0);
-    tcl->env->vars = var;
+    var = tcl_env_var(tcl->env, name);
   }
   if (v != NULL) {
     tcl_free(var->value);
