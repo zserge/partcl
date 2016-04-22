@@ -250,7 +250,7 @@ struct tcl {
   tcl_value_t *result;
 };
 
-tcl_value_t *tcl_var(struct tcl *tcl, const char *name, tcl_value_t *v) {
+tcl_value_t *tcl_var(struct tcl *tcl, tcl_value_t *name, tcl_value_t *v) {
   DBG("var(%s := %.*s)\n", tcl_string(name), tcl_length(v), tcl_string(v));
   struct tcl_var *var;
   for (var = tcl->env->vars; var != NULL; var = var->next) {
@@ -381,7 +381,7 @@ void tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
 static int tcl_cmd_set(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *var = tcl_list_at(args, 1);
   tcl_value_t *val = tcl_list_at(args, 2);
-  int r = tcl_result(tcl, FNORMAL, tcl_dup(tcl_var(tcl, tcl_string(var), val)));
+  int r = tcl_result(tcl, FNORMAL, tcl_dup(tcl_var(tcl, var, val)));
   tcl_free(var);
   return r;
 }
@@ -408,7 +408,7 @@ static int tcl_user_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
   for (i = 0; i < tcl_list_length(params); i++) {
     tcl_value_t *param = tcl_list_at(params, i);
     tcl_value_t *v = tcl_list_at(args, i + 1);
-    tcl_var(tcl, tcl_string(param), v);
+    tcl_var(tcl, param, v);
     tcl_free(param);
   }
   i = tcl_eval(tcl, tcl_string(body), tcl_length(body) + 1);
@@ -575,9 +575,11 @@ void tcl_destroy(struct tcl *tcl) {
 
 #ifndef TEST
 int main() {
+  struct tcl tcl;
   char buf[1024] = {0};
   int i = 0;
-  struct tcl *tcl = tcl_create();
+
+  tcl_init(&tcl);
   while (1) {
   next:
     buf[i++] = fgetc(stdin);
@@ -586,10 +588,10 @@ int main() {
         memset(buf, 0, sizeof(buf));
         i = 0;
       } else if (p.token == TCMD && *(p.from) != '\0') {
-        int r = tcl_eval(tcl, buf, strlen(buf));
+        int r = tcl_eval(&tcl, buf, strlen(buf));
         if (r != FERROR) {
-          printf("result> %.*s\n", tcl_length(tcl->result),
-                 tcl_string(tcl->result));
+          printf("result> %.*s\n", tcl_length(tcl.result),
+                 tcl_string(tcl.result));
         } else {
           printf("?!\n");
         }
