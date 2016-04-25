@@ -49,9 +49,9 @@ static void test_flow() {
              "I can compute that 4x4 = 16");
   check_eval(&tcl, "set a 1", "1");
   check_eval(&tcl, "while {<= $a 10} { puts \"$a [== $a 5]\";"
-                  "if {== $a 5} { puts {Missing five!}; set a [+ $a 1]; "
-                  "continue;}; puts \"I can compute that $a[]x$a = [square "
-                  "$a]\" ; set a [+ $a 1]}",
+                   "if {== $a 5} { puts {Missing five!}; set a [+ $a 1]; "
+                   "continue;}; puts \"I can compute that $a[]x$a = [square "
+                   "$a]\" ; set a [+ $a 1]}",
              "0");
   tcl_destroy(&tcl);
 }

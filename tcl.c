@@ -231,8 +231,7 @@ static struct tcl_env *tcl_env_alloc(struct tcl_env *parent) {
   return env;
 }
 
-static struct tcl_var *tcl_env_var(struct tcl_env *env,
-    tcl_value_t *name) {
+static struct tcl_var *tcl_env_var(struct tcl_env *env, tcl_value_t *name) {
   struct tcl_var *var = malloc(sizeof(struct tcl_var));
   var->name = tcl_dup(name);
   var->next = env->vars;
@@ -295,8 +294,8 @@ int tcl_subst(struct tcl *tcl, const char *s, size_t len) {
   if (s[0] == '{') {
     return tcl_result(tcl, FNORMAL, tcl_alloc(s + 1, len - 2));
   } else if (s[0] == '$') {
-    char buf[256];
-    sprintf(buf, "set %.*s", (int)(len - 1), s + 1);
+    char buf[256] = "set ";
+    strncat(buf, s+1, len-1);
     return tcl_eval(tcl, buf, strlen(buf) + 1);
   } else if (s[0] == '[') {
     tcl_value_t *expr = tcl_alloc(s + 1, len - 2);
@@ -401,7 +400,8 @@ static int tcl_cmd_subst(struct tcl *tcl, tcl_value_t *args, void *arg) {
 
 static int tcl_cmd_puts(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *text = tcl_list_at(args, 1);
-  printf("%s\n", tcl_string(text));
+  puts(tcl_string(text));
+  putchar('\n');
   return tcl_result(tcl, FNORMAL, text);
 }
 
@@ -539,11 +539,22 @@ static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
     c = a == b;
   else if (op[0] == '!' && op[1] == '=')
     c = a != b;
-  snprintf(buf, 64, "%d", c);
+
+  char *p = buf + sizeof(buf) - 1;
+  char neg = (c < 0);
+  *p-- = 0;
+  if (neg) c = -c;
+  do {
+    *p-- = '0' + (c % 10);
+    c = c / 10;
+  } while (c > 0);
+  if (neg) *p-- = '-';
+  p++;
+
   tcl_free(opval);
   tcl_free(aval);
   tcl_free(bval);
-  return tcl_result(tcl, FNORMAL, tcl_alloc(buf, strlen(buf)));
+  return tcl_result(tcl, FNORMAL, tcl_alloc(p, strlen(p)));
 }
 
 void tcl_init(struct tcl *tcl) {

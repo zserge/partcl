@@ -29,7 +29,6 @@ static void test_subst() {
   printf("###################\n");
   printf("\n");
 
-
   check_eval(NULL, "subst hello", "hello");
   check_eval(NULL, "subst {hello}", "hello");
   check_eval(NULL, "subst {hello world}", "hello world");
