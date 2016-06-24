@@ -398,12 +398,14 @@ static int tcl_cmd_subst(struct tcl *tcl, tcl_value_t *args, void *arg) {
   return r;
 }
 
+#ifndef TCL_DISABLE_PUTS
 static int tcl_cmd_puts(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *text = tcl_list_at(args, 1);
   puts(tcl_string(text));
   putchar('\n');
   return tcl_result(tcl, FNORMAL, text);
 }
+#endif
 
 static int tcl_user_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_value_t *code = (tcl_value_t *)arg;
@@ -510,6 +512,7 @@ static int tcl_cmd_while(struct tcl *tcl, tcl_value_t *args, void *arg) {
   }
 }
 
+#ifndef TCL_DISABLE_MATH
 static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
   char buf[64];
   tcl_value_t *opval = tcl_list_at(args, 0);
@@ -556,6 +559,7 @@ static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
   tcl_free(bval);
   return tcl_result(tcl, FNORMAL, tcl_alloc(p, strlen(p)));
 }
+#endif
 
 void tcl_init(struct tcl *tcl) {
   tcl->env = tcl_env_alloc(NULL);
@@ -563,17 +567,21 @@ void tcl_init(struct tcl *tcl) {
   tcl->cmds = NULL;
   tcl_register(tcl, "set", tcl_cmd_set, 0, NULL);
   tcl_register(tcl, "subst", tcl_cmd_subst, 2, NULL);
+#ifndef TCL_DISABLE_PUTS
   tcl_register(tcl, "puts", tcl_cmd_puts, 2, NULL);
+#endif
   tcl_register(tcl, "proc", tcl_cmd_proc, 4, NULL);
   tcl_register(tcl, "if", tcl_cmd_if, 0, NULL);
   tcl_register(tcl, "while", tcl_cmd_while, 3, NULL);
   tcl_register(tcl, "return", tcl_cmd_flow, 0, NULL);
   tcl_register(tcl, "break", tcl_cmd_flow, 1, NULL);
   tcl_register(tcl, "continue", tcl_cmd_flow, 1, NULL);
+#ifndef TCL_DISABLE_MATH
   char *math[] = {"+", "-", "*", "/", ">", ">=", "<", "<=", "==", "!="};
   for (int i = 0; i < (sizeof(math) / sizeof(math[0])); i++) {
     tcl_register(tcl, math[i], tcl_cmd_math, 3, NULL);
   }
+#endif
 }
 
 void tcl_destroy(struct tcl *tcl) {
