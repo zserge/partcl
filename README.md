@@ -37,12 +37,12 @@ tcl_destroy(&tcl);
 
 ## Language syntax
 
-Tcl script is made up of of _commands_ separated by semicolons or newline
+Tcl script is made up of _commands_ separated by semicolons or newline
 symbols. Commnads in their turn are made up of _words_ separated by whitespace.
 To make whitespace a part of the word one may use double quotes or braces.
 
 An important part of the language is _command substitution_, when the result of
-command inside square braces is returned as part of the outer command, e.g.
+a command inside square braces is returned as a part of the outer command, e.g.
 `puts [+ 1 2]`.
 
 The only data type of the language is a string. Although it may complicate
