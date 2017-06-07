@@ -9,6 +9,8 @@
 #define DBG(...)
 #endif
 
+#define MAX_VAR_LENGTH 256
+
 struct tcl;
 int tcl_eval(struct tcl *tcl, const char *s, size_t len);
 
@@ -34,6 +36,8 @@ int tcl_next(const char *s, size_t n, const char **from, const char **to,
   int depth = 0;
   char open;
   char close;
+
+  DBG("tcl_next(%.*s)+%d+%d|%d\n", n, s, *from - s, *to - s, *q);
 
   /* Skip leading spaces if not quoted */
   for (; !*q && n > 0 && tcl_is_space(*s); s++, n--)
@@ -101,9 +105,9 @@ struct tcl_parser {
 #define tcl_each(s, len, skiperr)                                              \
   for (struct tcl_parser p = {NULL, NULL, s, s + len, 0, TERROR};              \
        p.start < p.end &&                                                      \
-           (((p.token = tcl_next(p.start, p.end - p.start, &p.from, &p.to,     \
-                                 &p.q)) != TERROR) ||                          \
-            skiperr);                                                          \
+       (((p.token = tcl_next(p.start, p.end - p.start, &p.from, &p.to,         \
+                             &p.q)) != TERROR) ||                              \
+        skiperr);                                                              \
        p.start = p.to)
 
 /* ------------------------------------------------------- */
@@ -292,11 +296,19 @@ int tcl_subst(struct tcl *tcl, const char *s, size_t len) {
     return tcl_result(tcl, FNORMAL, tcl_alloc("", 0));
   }
   if (s[0] == '{') {
-    return tcl_result(tcl, FNORMAL, tcl_alloc(s + 1, len - 2));
+    if (len > 1) {
+      return tcl_result(tcl, FNORMAL, tcl_alloc(s + 1, len - 2));
+    } else {
+      return tcl_result(tcl, FERROR, tcl_alloc("", 0));
+    }
   } else if (s[0] == '$') {
-    char buf[256] = "set ";
-    strncat(buf, s+1, len-1);
-    return tcl_eval(tcl, buf, strlen(buf) + 1);
+    if (len < MAX_VAR_LENGTH) {
+      char buf[5 + MAX_VAR_LENGTH] = "set ";
+      strncat(buf, s + 1, len - 1);
+      return tcl_eval(tcl, buf, strlen(buf) + 1);
+    } else {
+      return tcl_result(tcl, FERROR, tcl_alloc("", 0));
+    }
   } else if (s[0] == '[') {
     tcl_value_t *expr = tcl_alloc(s + 1, len - 2);
     int r = tcl_eval(tcl, tcl_string(expr), tcl_length(expr) + 1);
@@ -312,7 +324,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
   tcl_value_t *list = tcl_list_alloc();
   tcl_value_t *cur = NULL;
   tcl_each(s, len, 1) {
-    /*DBG("tcl_next %d %.*s\n", p.token, (int)(p.to - p.from), p.from);*/
+    DBG("tcl_next %d %.*s\n", p.token, (int)(p.to - p.from), p.from);
     switch (p.token) {
     case TERROR:
       DBG("eval: FERROR, lexer error\n");
@@ -546,12 +558,14 @@ static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
   char *p = buf + sizeof(buf) - 1;
   char neg = (c < 0);
   *p-- = 0;
-  if (neg) c = -c;
+  if (neg)
+    c = -c;
   do {
     *p-- = '0' + (c % 10);
     c = c / 10;
   } while (c > 0);
-  if (neg) *p-- = '-';
+  if (neg)
+    *p-- = '-';
   p++;
 
   tcl_free(opval);
@@ -623,6 +637,7 @@ int main() {
       if (p.token == TERROR && (p.to - buf) != i) {
         memset(buf, 0, buflen);
         i = 0;
+        break;
       } else if (p.token == TCMD && *(p.from) != '\0') {
         int r = tcl_eval(&tcl, buf, strlen(buf));
         if (r != FERROR) {
@@ -639,7 +654,7 @@ int main() {
     }
   }
 
-  if(i) {
+  if (i) {
     printf("incomplete input\n");
     return -1;
   }

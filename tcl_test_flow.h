@@ -53,6 +53,7 @@ static void test_flow() {
                    "continue;}; puts \"I can compute that $a[]x$a = [square "
                    "$a]\" ; set a [+ $a 1]}",
              "0");
+
   tcl_destroy(&tcl);
 }
 

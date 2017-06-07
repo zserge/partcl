@@ -11,8 +11,11 @@ int status = 0;
   } while (0)
 
 #include "tcl_test_lexer.h"
+
 #include "tcl_test_subst.h"
+
 #include "tcl_test_flow.h"
+
 #include "tcl_test_math.h"
 
 int main() {

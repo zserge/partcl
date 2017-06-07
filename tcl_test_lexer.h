@@ -1,9 +1,9 @@
 #ifndef TCL_TEST_LEXER_H
 #define TCL_TEST_LEXER_H
 
-#include <string.h>
-#include <stdarg.h>
 #include <assert.h>
+#include <stdarg.h>
+#include <string.h>
 
 static void va_check_tokens(const char *s, size_t len, int count, va_list ap) {
   int j = 0;
