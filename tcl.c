@@ -27,7 +27,7 @@ void *smalloc( size_t size)
   if ( size>MAX_STRING_LENGTH )
   {
     puts( "MALLOC ERROR: too big length" );
-    return ( void* )NULL;
+    return NULL;
   }
   uint8_t buf_verifier=0;
   while( buf_verifier<MAX_AMOUNT_OF_STRINGTH )
@@ -40,14 +40,14 @@ void *smalloc( size_t size)
     buf_verifier++;
   }
   puts( "MALLOC ERROR: no memory left" );
-  return ( void* )NULL;
+  return NULL;
 }
 void *srealloc( void*ptr, size_t size )
 {
   if ( size>MAX_STRING_LENGTH )
   {
     puts( "REALLOC ERROR: too big length" );
-    return ( void* )NULL;
+    return NULL;
   }
   if(ptr==NULL)
     return smalloc (size) ;
@@ -59,7 +59,7 @@ void *srealloc( void*ptr, size_t size )
     str_num++;
   }
   puts( "REALLOC ERROR" );
-  return ( void* )NULL;
+  return NULL;
 }
 void sfree( void* ptr )
 {
