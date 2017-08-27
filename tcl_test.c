@@ -19,6 +19,7 @@ int status = 0;
 #include "tcl_test_math.h"
 
 int main() {
+  smalloc_init();
   test_lexer();
   test_subst();
   test_flow();
