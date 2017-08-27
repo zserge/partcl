@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 #if 0
 #define DBG printf
@@ -9,8 +10,74 @@
 #define DBG(...)
 #endif
 
-#define MAX_VAR_LENGTH 256
-
+#define MAX_VAR_LENGTH (uint8_t) 128
+#define MAX_STRING_LENGTH (uint8_t) 250
+#define MAX_AMOUNT_OF_STRINGTH (uint8_t) 255
+#define IN_USE (uint8_t) 1
+#define NOT_IN_USE (uint8_t) 0
+static uint8_t buffer[ MAX_AMOUNT_OF_STRINGTH ][ MAX_STRING_LENGTH ];
+static uint8_t buf_info[ MAX_AMOUNT_OF_STRINGTH ];
+void smalloc_init( void )
+{
+  memset( &buffer,0,sizeof buffer );
+  memset( &buf_info,NOT_IN_USE,sizeof buf_info );
+}
+void *smalloc( size_t size)
+{
+  if ( size>MAX_STRING_LENGTH )
+  {
+    puts( "MALLOC ERROR: too big length" );
+    return ( void* )NULL;
+  }
+  uint8_t buf_verifier=0;
+  while( buf_verifier<MAX_AMOUNT_OF_STRINGTH )
+  {
+    if( buf_info[buf_verifier]==NOT_IN_USE )
+    {
+      buf_info[buf_verifier]=IN_USE;
+      return &buffer[buf_verifier][0];
+    }
+    buf_verifier++;
+  }
+  puts( "MALLOC ERROR: no memory left" );
+  return ( void* )NULL;
+}
+void *srealloc( void*ptr, size_t size )
+{
+  if ( size>MAX_STRING_LENGTH )
+  {
+    puts( "REALLOC ERROR: too big length" );
+    return ( void* )NULL;
+  }
+  if(ptr==NULL)
+    return smalloc (size) ;
+  uint8_t str_num=0;
+  while( str_num<MAX_AMOUNT_OF_STRINGTH )
+  {
+    if( ( ptr==&buffer[str_num][0] )&&( buf_info[str_num]==IN_USE ) )
+      return (void*)ptr;
+    str_num++;
+  }
+  puts( "REALLOC ERROR" );
+  return ( void* )NULL;
+}
+void sfree( void* ptr )
+{
+  puts( "free called");
+  uint8_t str_num=0;
+  while( str_num<MAX_AMOUNT_OF_STRINGTH )
+  {
+    if( ptr==&buffer[str_num][0] )
+        {
+          memset( &buffer[str_num][0],0,MAX_STRING_LENGTH );
+          buf_info[str_num]=NOT_IN_USE;
+          return;
+        }
+    str_num++;
+  }
+  puts( "FREE ERROR" );
+}
+ 
 struct tcl;
 int tcl_eval(struct tcl *tcl, const char *s, size_t len);
 
@@ -121,11 +188,11 @@ const char *tcl_string(tcl_value_t *v) { return (char *)v; }
 int tcl_int(tcl_value_t *v) { return atoi((char *)v); }
 int tcl_length(tcl_value_t *v) { return v == NULL ? 0 : strlen(v); }
 
-void tcl_free(tcl_value_t *v) { free(v); }
+void tcl_free(tcl_value_t *v) { sfree(v); }
 
 tcl_value_t *tcl_append_string(tcl_value_t *v, const char *s, size_t len) {
   size_t n = tcl_length(v);
-  v = realloc(v, n + len + 1);
+  v = srealloc(v, n + len + 1);
   memset((char *)tcl_string(v) + n, 0, len + 1);
   strncpy((char *)tcl_string(v) + n, s, len);
   return v;
@@ -157,7 +224,7 @@ int tcl_list_length(tcl_value_t *v) {
   return count;
 }
 
-void tcl_list_free(tcl_value_t *v) { free(v); }
+void tcl_list_free(tcl_value_t *v) { sfree(v); }
 
 tcl_value_t *tcl_list_at(tcl_value_t *v, int index) {
   int i = 0;
@@ -229,14 +296,14 @@ struct tcl_env {
 };
 
 static struct tcl_env *tcl_env_alloc(struct tcl_env *parent) {
-  struct tcl_env *env = malloc(sizeof(*env));
+  struct tcl_env *env = smalloc(sizeof(*env));
   env->vars = NULL;
   env->parent = parent;
   return env;
 }
 
 static struct tcl_var *tcl_env_var(struct tcl_env *env, tcl_value_t *name) {
-  struct tcl_var *var = malloc(sizeof(struct tcl_var));
+  struct tcl_var *var = smalloc(sizeof(struct tcl_var));
   var->name = tcl_dup(name);
   var->next = env->vars;
   var->value = tcl_alloc("", 0);
@@ -251,9 +318,9 @@ static struct tcl_env *tcl_env_free(struct tcl_env *env) {
     env->vars = env->vars->next;
     tcl_free(var->name);
     tcl_free(var->value);
-    free(var);
+    sfree(var);
   }
-  free(env);
+  sfree(env);
   return parent;
 }
 
@@ -386,7 +453,7 @@ int tcl_eval(struct tcl *tcl, const char *s, size_t len) {
 /* --------------------------------- */
 void tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
                   void *arg) {
-  struct tcl_cmd *cmd = malloc(sizeof(struct tcl_cmd));
+  struct tcl_cmd *cmd = smalloc(sizeof(struct tcl_cmd));
   cmd->name = tcl_alloc(name, strlen(name));
   cmd->fn = fn;
   cmd->arg = arg;
@@ -606,8 +673,8 @@ void tcl_destroy(struct tcl *tcl) {
     struct tcl_cmd *cmd = tcl->cmds;
     tcl->cmds = tcl->cmds->next;
     tcl_free(cmd->name);
-    free(cmd->arg);
-    free(cmd);
+    sfree(cmd->arg);
+    sfree(cmd);
   }
   tcl_free(tcl->result);
 }
@@ -616,9 +683,10 @@ void tcl_destroy(struct tcl *tcl) {
 #define CHUNK 1024
 
 int main() {
+  smalloc_init();
   struct tcl tcl;
   int buflen = CHUNK;
-  char *buf = malloc(buflen);
+  char *buf = smalloc(buflen);
   int i = 0;
 
   tcl_init(&tcl);
@@ -626,7 +694,7 @@ int main() {
     int inp = fgetc(stdin);
 
     if (i > buflen - 1)
-      buf = realloc(buf, buflen += CHUNK);
+      buf = srealloc(buf, buflen += CHUNK);
 
     if (inp == 0 || inp == EOF)
       break;
