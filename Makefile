@@ -1,5 +1,5 @@
 CC ?= clang
-CFLAGS ?= -Os -Wall -std=c99 -pedantic
+CFLAGS ?= -Os -Wall -Wextra -std=c99 -pedantic
 LDFLAGS ?= -Os
 
 TCLBIN := tcl

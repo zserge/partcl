@@ -396,7 +396,7 @@ void tcl_register(struct tcl *tcl, const char *name, tcl_cmd_fn_t fn, int arity,
 }
 
 static int tcl_cmd_set(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  (void) arg;
+  (void)arg;
   tcl_value_t *var = tcl_list_at(args, 1);
   tcl_value_t *val = tcl_list_at(args, 2);
   int r = tcl_result(tcl, FNORMAL, tcl_dup(tcl_var(tcl, var, val)));
@@ -405,7 +405,7 @@ static int tcl_cmd_set(struct tcl *tcl, tcl_value_t *args, void *arg) {
 }
 
 static int tcl_cmd_subst(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  (void) arg;
+  (void)arg;
   tcl_value_t *s = tcl_list_at(args, 1);
   int r = tcl_subst(tcl, tcl_string(s), tcl_length(s));
   tcl_free(s);
@@ -414,7 +414,7 @@ static int tcl_cmd_subst(struct tcl *tcl, tcl_value_t *args, void *arg) {
 
 #ifndef TCL_DISABLE_PUTS
 static int tcl_cmd_puts(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  (void) arg;
+  (void)arg;
   tcl_value_t *text = tcl_list_at(args, 1);
   puts(tcl_string(text));
   putchar('\n');
@@ -442,7 +442,7 @@ static int tcl_user_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
 }
 
 static int tcl_cmd_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  (void) arg;
+  (void)arg;
   tcl_value_t *name = tcl_list_at(args, 1);
   tcl_register(tcl, tcl_string(name), tcl_user_proc, 0, tcl_dup(args));
   tcl_free(name);
@@ -450,7 +450,7 @@ static int tcl_cmd_proc(struct tcl *tcl, tcl_value_t *args, void *arg) {
 }
 
 static int tcl_cmd_if(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  (void) arg;
+  (void)arg;
   int i = 1;
   int n = tcl_list_length(args);
   int r = FNORMAL;
@@ -478,7 +478,7 @@ static int tcl_cmd_if(struct tcl *tcl, tcl_value_t *args, void *arg) {
 }
 
 static int tcl_cmd_flow(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  (void) arg;
+  (void)arg;
   tcl_value_t *flowval = tcl_list_at(args, 0);
   const char *flow = tcl_string(flowval);
   if (strcmp(flow, "break") == 0) {
@@ -495,7 +495,7 @@ static int tcl_cmd_flow(struct tcl *tcl, tcl_value_t *args, void *arg) {
 }
 
 static int tcl_cmd_while(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  (void) arg;
+  (void)arg;
   tcl_value_t *cond = tcl_list_at(args, 1);
   tcl_value_t *loop = tcl_list_at(args, 2);
   int r;
@@ -533,7 +533,7 @@ static int tcl_cmd_while(struct tcl *tcl, tcl_value_t *args, void *arg) {
 
 #ifndef TCL_DISABLE_MATH
 static int tcl_cmd_math(struct tcl *tcl, tcl_value_t *args, void *arg) {
-  (void) arg;
+  (void)arg;
   char buf[64];
   tcl_value_t *opval = tcl_list_at(args, 0);
   tcl_value_t *aval = tcl_list_at(args, 1);
