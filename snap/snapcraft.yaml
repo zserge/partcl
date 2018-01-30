@@ -1,0 +1,21 @@
+name: partcl
+version: master
+summary: a micro Tcl implementation
+description: |
+  Partcl interpreter is a simple structure struct tcl which keeps the current
+  environment, array of available commands and a last result value.
+
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: strict
+
+apps:
+  partcl:
+    command: tcl
+
+parts:
+  partcl:
+    source: .
+    plugin: make
+    make-parameters: [tcl]
+    build-packages: [clang, llvm]
+    artifacts: [tcl]
