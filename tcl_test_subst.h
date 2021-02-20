@@ -3,8 +3,8 @@
 
 static void check_eval(struct tcl *tcl, const char *s, char *expected) {
   int destroy = 0;
+  struct tcl tmp;
   if (tcl == NULL) {
-    struct tcl tmp;
     tcl_init(&tmp);
     tcl = &tmp;
     destroy = 1;
