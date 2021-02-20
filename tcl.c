@@ -81,6 +81,9 @@ int tcl_next(const char *s, size_t n, const char **from, const char **to,
     }
     *from = *to = s + 1;
     return TWORD;
+  } else if (*s == ']' || *s == '}') {
+    /* Unbalanced bracket or brace */
+    return TERROR;
   } else {
     while (i < n && (*q || !tcl_is_space(s[i])) && !tcl_is_special(s[i], *q)) {
       i++;
