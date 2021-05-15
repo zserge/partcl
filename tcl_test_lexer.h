@@ -63,6 +63,10 @@ static void test_lexer() {
   check_tokens("foo bar", 3, TWORD, "foo", TWORD, "bar", TCMD, "");
   check_tokens("foo bar baz", 4, TWORD, "foo", TWORD, "bar", TWORD, "baz", TCMD,
                "");
+  /* Imbalanced braces/brackets */
+  check_tokens("foo ]", 2, TWORD, "foo", TERROR, "");
+  check_tokens("foo }", 2, TWORD, "foo", TERROR, "");
+
   /* Grouping */
   check_tokens("foo {bar baz}", 3, TWORD, "foo", TWORD, "{bar baz}", TCMD, "");
   check_tokens("foo {bar {baz} {q u x}}", 3, TWORD, "foo", TWORD,
