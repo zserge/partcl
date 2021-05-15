@@ -1,6 +1,6 @@
 # Partcl - a minimal Tcl interpreter
 
-[![Build Status](https://travis-ci.org/zserge/partcl.svg?branch=master)](https://travis-ci.org/zserge/partcl)
+[![Build Status](https://img.shields.io/github/workflow/status/zserge/partcl/Build%20Pipeline)](https://github.com/zserge/partcl)
 
 ## Features
 
