@@ -151,7 +151,7 @@ tcl_value_t *tcl_dup(tcl_value_t *v) {
   return tcl_alloc(tcl_string(v), tcl_length(v));
 }
 
-tcl_value_t *tcl_list_alloc() { return tcl_alloc("", 0); }
+tcl_value_t *tcl_list_alloc(void) { return tcl_alloc("", 0); }
 
 int tcl_list_length(tcl_value_t *v) {
   int count = 0;
@@ -630,7 +630,7 @@ void tcl_destroy(struct tcl *tcl) {
 #ifndef TEST
 #define CHUNK 1024
 
-int main() {
+int main(void) {
   struct tcl tcl;
   int buflen = CHUNK;
   char *buf = malloc(buflen);

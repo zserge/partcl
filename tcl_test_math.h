@@ -1,7 +1,7 @@
 #ifndef TCL_TEST_MATH_H
 #define TCL_TEST_MATH_H
 
-static void test_math() {
+static void test_math(void) {
   printf("\n");
   printf("##################\n");
   printf("### MATH TESTS ###\n");

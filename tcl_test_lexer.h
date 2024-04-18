@@ -46,7 +46,7 @@ static void check_tokens_len(const char *s, size_t len, int count, ...) {
   va_end(ap);
 }
 
-static void test_lexer() {
+static void test_lexer(void) {
   printf("\n");
   printf("###################\n");
   printf("### LEXER TESTS ###\n");

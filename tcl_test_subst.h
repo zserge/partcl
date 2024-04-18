@@ -22,7 +22,7 @@ static void check_eval(struct tcl *tcl, const char *s, char *expected) {
   }
 }
 
-static void test_subst() {
+static void test_subst(void) {
   printf("\n");
   printf("###################\n");
   printf("### SUBST TESTS ###\n");

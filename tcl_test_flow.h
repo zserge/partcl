@@ -1,7 +1,7 @@
 #ifndef TCL_TEST_FLOW_H
 #define TCL_TEST_FLOW_H
 
-static void test_flow() {
+static void test_flow(void) {
   printf("\n");
   printf("##########################\n");
   printf("### CONTROL FLOW TESTS ###\n");
