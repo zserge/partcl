@@ -113,6 +113,7 @@ void tcl_free(tcl_value_t* v) { free(v); }
 tcl_value_t* tcl_append_string(tcl_value_t* v, const char* s, size_t len) {
   size_t n = tcl_length(v);
   v = realloc(v, n + len + 1);
+  if (v == NULL) { return NULL; }
   memset((char*)tcl_string(v) + n, 0, len + 1);
   strncpy((char*)tcl_string(v) + n, s, len);
   return v;
@@ -593,7 +594,10 @@ int main(void) {
   while (1) {
     int inp = fgetc(stdin);
 
-    if (i > buflen - 1) { buf = realloc(buf, buflen += CHUNK); }
+    if (i > buflen - 1) {
+      buf = realloc(buf, buflen += CHUNK);
+      if (buf == NULL) { return -1; }
+    }
 
     if (inp == 0 || inp == EOF) { break; }
 
