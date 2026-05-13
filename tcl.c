@@ -348,8 +348,20 @@ int tcl_eval(struct tcl* tcl, const char* s, size_t len) {
 /* --------------------------------- */
 /* --------------------------------- */
 /* --------------------------------- */
+static int tcl_user_proc(struct tcl* tcl, tcl_value_t* args, void* arg);
 void tcl_register(struct tcl* tcl, const char* name, tcl_cmd_fn_t fn, int arity, void* arg) {
-  struct tcl_cmd* cmd = malloc(sizeof(struct tcl_cmd));
+  struct tcl_cmd* cmd = tcl->cmds;
+  while (cmd) {
+    if (strcmp(tcl_string(cmd->name), name) == 0) {
+      if (cmd->fn == tcl_user_proc && cmd->arg) { tcl_free((tcl_value_t*)cmd->arg); }
+      cmd->fn = fn;
+      cmd->arg = arg;
+      cmd->arity = arity;
+      return;
+    }
+    cmd = cmd->next;
+  }
+  cmd = malloc(sizeof(struct tcl_cmd));
   cmd->name = tcl_alloc(name, strlen(name));
   cmd->fn = fn;
   cmd->arg = arg;
