@@ -289,6 +289,8 @@ int tcl_eval(struct tcl* tcl, const char* s, size_t len) {
     switch (p.token) {
       case TERROR:
         DBG("eval: FERROR, lexer error\n");
+        tcl_free(cur);
+        tcl_list_free(list);
         return tcl_result(tcl, FERROR, tcl_alloc("", 0));
       case TWORD:
         DBG("token %.*s, length=%d, cur=%p (3.1.1)\n", (int)(p.to - p.from), p.from,
