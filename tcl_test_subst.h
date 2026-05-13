@@ -79,6 +79,28 @@ static void test_subst(void) {
   check_eval(NULL, "puts {[}[]hello[]{]}", "[hello]");
   check_eval(NULL, "puts {{hello}}", "{hello}");
 
+  /* Verify puts outputs text followed by exactly one newline */
+  {
+    struct tcl tcl;
+    tcl_init(&tcl);
+    FILE* old_stdout = stdout;
+    FILE* tmp = tmpfile();
+    stdout = tmp;
+    tcl_eval(&tcl, "puts hello", 11);
+    stdout = old_stdout;
+    fflush(tmp);
+    rewind(tmp);
+    char buf[64] = {0};
+    size_t n = fread(buf, 1, sizeof(buf) - 1, tmp);
+    fclose(tmp);
+    if (n != 6 || strcmp(buf, "hello\n") != 0) {
+      FAIL("puts output was %zu bytes: '%s', expected 'hello\\n'\n", n, buf);
+    } else {
+      printf("OK: puts hello -> 'hello\\n'\n");
+    }
+    tcl_destroy(&tcl);
+  }
+
   /* XXX most command involving unpaired braces (e.g. in quotes) don't work
    * because of the dirty list implementation */
 }

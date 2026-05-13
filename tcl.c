@@ -377,7 +377,6 @@ static int tcl_cmd_puts(struct tcl* tcl, tcl_value_t* args, void* arg) {
   (void)arg;
   tcl_value_t* text = tcl_list_at(args, 1);
   puts(tcl_string(text));
-  putchar('\n');
   return tcl_result(tcl, FNORMAL, text);
 }
 #endif
