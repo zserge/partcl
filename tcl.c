@@ -445,7 +445,8 @@ static int tcl_cmd_flow(struct tcl* tcl, tcl_value_t* args, void* arg) {
   } else if (strcmp(flow, "continue") == 0) {
     r = FAGAIN;
   } else if (strcmp(flow, "return") == 0) {
-    r = tcl_result(tcl, FRETURN, tcl_list_at(args, 1));
+    tcl_value_t* val = tcl_list_at(args, 1);
+    r = tcl_result(tcl, FRETURN, val ? val : tcl_alloc("", 0));
   }
   tcl_free(flowval);
   return r;

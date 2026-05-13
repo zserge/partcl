@@ -52,6 +52,8 @@ static void test_flow(void) {
   check_eval_err("proc bad {} { / 1 0 }; bad");
   /* Return value from proc should propagate */
   check_eval(NULL, "proc retval {} { return 42 }; retval", "42");
+  /* Bare return with no value should not crash */
+  check_eval(NULL, "proc nop {} { return }; nop", "");
 }
 
 #endif /* TCL_TEST_FLOW_H */
