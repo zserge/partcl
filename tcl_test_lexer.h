@@ -129,6 +129,10 @@ static void test_lexer(void) {
   check_tokens_len("set a {\nhello\n}", 15, 3, TWORD, "set", TWORD, "a", TERROR, "");
   check_tokens_len("set a {\nhello\n}\n", 16, 4, TWORD, "set", TWORD, "a", TWORD, "{\nhello\n}",
                    TCMD, "");
+
+  /* $ at buffer end should not read out of bounds */
+  check_tokens_len("set $", 5, 2, TWORD, "set", TERROR, "");
+  check_tokens_len("$", 1, 1, TERROR, "");
 }
 
 #endif /* TCL_TEST_LEXER_H */

@@ -43,7 +43,7 @@ int tcl_next(const char* s, size_t n, const char** from, const char** to, int* q
     return TCMD;
   }
   if (*s == '$') { /* Variable token, must not start with a space or quote */
-    if (tcl_is_space(s[1]) || s[1] == '"') { return TERROR; }
+    if (n < 2 || tcl_is_space(s[1]) || s[1] == '"') { return TERROR; }
     int mode = *q;
     *q = 0;
     int r = tcl_next(s + 1, n - 1, to, to, q);
