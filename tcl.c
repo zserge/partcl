@@ -469,7 +469,7 @@ static int tcl_cmd_while(struct tcl* tcl, tcl_value_t* args, void* arg) {
       tcl_free(loop);
       return FNORMAL;
     }
-    int r = tcl_eval(tcl, tcl_string(loop), tcl_length(loop) + 1);
+    r = tcl_eval(tcl, tcl_string(loop), tcl_length(loop) + 1);
     switch (r) {
       case FBREAK:
         tcl_free(cond);
