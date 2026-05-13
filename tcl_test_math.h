@@ -26,6 +26,10 @@ static void test_math(void) {
 
   /* Division by zero */
   check_eval_err("/ 1 0");
+
+  /* INT_MIN boundary */
+  check_eval(NULL, "- 0 2147483647", "-2147483647");
+  check_eval(NULL, "- -2147483647 1", "-2147483648");
 }
 
 #endif /* TCL_TEST_MATH_H */

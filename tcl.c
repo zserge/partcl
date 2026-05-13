@@ -529,12 +529,12 @@ static int tcl_cmd_math(struct tcl* tcl, tcl_value_t* args, void* arg) {
 
   char* p = buf + sizeof(buf) - 1;
   char neg = (c < 0);
+  unsigned int uc = neg ? -(unsigned int)c : (unsigned int)c;
   *p-- = 0;
-  if (neg) { c = -c; }
   do {
-    *p-- = '0' + (c % 10);
-    c = c / 10;
-  } while (c > 0);
+    *p-- = '0' + (uc % 10);
+    uc = uc / 10;
+  } while (uc > 0);
   if (neg) { *p-- = '-'; }
   p++;
 
