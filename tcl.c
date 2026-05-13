@@ -394,11 +394,11 @@ static int tcl_user_proc(struct tcl* tcl, tcl_value_t* args, void* arg) {
     tcl_var(tcl, param, v);
     tcl_free(param);
   }
-  tcl_eval(tcl, tcl_string(body), tcl_length(body) + 1);
+  int r = tcl_eval(tcl, tcl_string(body), tcl_length(body) + 1);
   tcl->env = tcl_env_free(tcl->env);
   tcl_free(params);
   tcl_free(body);
-  return FNORMAL;
+  return (r == FRETURN) ? FNORMAL : r;
 }
 
 static int tcl_cmd_proc(struct tcl* tcl, tcl_value_t* args, void* arg) {

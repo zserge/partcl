@@ -47,6 +47,11 @@ static void test_flow(void) {
              "0");
 
   tcl_destroy(&tcl);
+
+  /* Error in proc body should propagate */
+  check_eval_err("proc bad {} { / 1 0 }; bad");
+  /* Return value from proc should propagate */
+  check_eval(NULL, "proc retval {} { return 42 }; retval", "42");
 }
 
 #endif /* TCL_TEST_FLOW_H */
