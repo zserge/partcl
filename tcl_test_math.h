@@ -23,6 +23,9 @@ static void test_math(void) {
   check_eval(NULL, "/ 7 2", "3");
 
   check_eval(NULL, "set a 5;set b 7; subst [- [* 4 [+ $a $b]] 6]", "42");
+
+  /* Division by zero */
+  check_eval_err("/ 1 0");
 }
 
 #endif /* TCL_TEST_MATH_H */

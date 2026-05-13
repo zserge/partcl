@@ -504,6 +504,12 @@ static int tcl_cmd_math(struct tcl* tcl, tcl_value_t* args, void* arg) {
   } else if (op[0] == '*') {
     c = a * b;
   } else if (op[0] == '/') {
+    if (b == 0) {
+      tcl_free(opval);
+      tcl_free(aval);
+      tcl_free(bval);
+      return tcl_result(tcl, FERROR, tcl_alloc("division by zero", 16));
+    }
     c = a / b;
   } else if (op[0] == '>' && op[1] == '\0') {
     c = a > b;

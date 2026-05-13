@@ -19,6 +19,17 @@ static void check_eval(struct tcl* tcl, const char* s, char* expected) {
   if (destroy) { tcl_destroy(tcl); }
 }
 
+static void check_eval_err(const char* s) {
+  struct tcl tcl;
+  tcl_init(&tcl);
+  if (tcl_eval(&tcl, s, strlen(s) + 1) != FERROR) {
+    FAIL("expected error, but got: %s (%s)\n", tcl_string(tcl.result), s);
+  } else {
+    printf("OK: %s -> error\n", s);
+  }
+  tcl_destroy(&tcl);
+}
+
 static void test_subst(void) {
   printf("\n");
   printf("###################\n");
