@@ -587,6 +587,7 @@ void tcl_destroy(struct tcl* tcl) {
     struct tcl_cmd* cmd = tcl->cmds;
     tcl->cmds = tcl->cmds->next;
     tcl_free(cmd->name);
+    if (cmd->fn == tcl_user_proc && cmd->arg) { tcl_free((tcl_value_t*)cmd->arg); }
     free(cmd);
   }
   tcl_free(tcl->result);
